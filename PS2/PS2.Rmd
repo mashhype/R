@@ -1,0 +1,125 @@
+---
+title: "PS2"
+author: "Mashhood Syed"
+date: "October 17, 2014"
+output: pdf_document
+---
+
+This dataset named "ts_data" is a set of observations of tech startup companies that have received VC funding.  The dataset is rich with categorical (industry sector, funding status) variables, monetary variables, time variables, and location variables.  This dataset was found at crunchbase.com.
+
+We know that the San Francisco Bay Area has a dense concentration of tech startups.  But what about other regions of CA?  How does Los Angeles's startup scene look for softare companies?  In this assignment I take a look at a few different variables to get a better idea of what LA's tech scene tells us.
+
+What do we want to try to uncover:
+
+1. What cities/areas have the highest number of software startups?
+    San Francisco, then DC...
+1. We can start by comparing and contrasting the SF Bay Tech Scene with the So Cal Tech Scene
+  a. How many .io domains exist in SF Bay Area vs. So Cal as a % of the total?
+    i. What is the category of the .io startups in each scene?
+  b. How many new startups have been founded since 2008 in SF vs. So Cal?
+  c. What does the distribution of the category_list variable look like in SF vs. So Cal?
+  d. How many startups have been acquired in SF vs. So Cal since 2008 as a % of total?
+  e. How many startups were founded each year from 2008 to current in each scene as a % of total?
+  
+
+          Summary for the Variable "Category_list"
+```{r}
+
+setwd("~/Desktop/PS2")
+ts_file = "~/Desktop/PS2/crunchbase_monthly_export.csv"
+ts_data = read.csv(ts_file, header=T)
+#cleaning up the data
+funding = ts_data$funding_total_usd
+test <- funding
+destring <- function(x,keep="0-9.") {
+    return( as.numeric(gsub(paste("[^",keep,"]+",sep=""),"",x)) )
+}
+funding_num = destring(test)
+#creating subsets
+ts_data = cbind(ts_data, funding_num)  
+ts_data3 = subset(ts_data, market == " Software ")
+ts_data_final = ts_data3
+
+cali = subset(ts_data_final, state_code == "CA")
+sfbay = subset(cali, region == "SF Bay Area")
+la = subset(cali, region == "Los Angeles")
+attach(la)
+
+#summaries
+options(scipen=999)
+summary(sfbay)
+summary(la)
+
+library(ggplot2)
+hist(la$founded_year, prob=T, ylim=c(0, 1), breaks = 150, main = " ", xlab = " ", col=4)
+ggplot(la, aes(x=city)) + geom_histogram(aes(y=..count..)) + ylab( "Count Of Startups") + xlab( "City") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+$\pagebreak$          
+        Compare Qualitative vs. Qualitative 
+
+        Comparing "city" vs. "funding amount"
+        
+```{r}
+
+ggplot(la, aes(x=city)) + geom_histogram( aes(y=..count..)) + ylab( "Counts") + xlab( " ") + 
+theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+$\pagebreak$
+        Comparing Qualitative vs. Quantitative
+        
+        Box Plot of Funding by City
+        
+```{r}
+
+ggplot(la, aes(x=city, y=funding_num)) + geom_boxplot(width=0.90) + ylab( "Funding in USD") + xlab( "Software Startups by State") + geom_point( aes(x=city, y=funding_num), size=1, colour="navyblue", alpha=0.7, position=position_jitter( width=0.025)) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+$\pagebreak$ 
+        Comparing Quantitative vs. Quantitative
+
+        Plot of Founded Year and Funding Amount
+```{r}
+plot(la$funding_num~la$founded_year, ylim=c(0, 100000000), xlim=c(2000, 2015), las=2, cex.axis=.65, main = "Amount of Funding and Year Founded")
+```
+$\pagebreak$       
+
+          Comparing Quantitative vs. Quantitative
+          
+          Boxplot of The Amount of Funding By Year
+          
+```{r}
+
+boxplot(la$funding_num~la$founded_year, las=1, cex.axis=.65,ylim=c(0, 50000000), main="Funding By Year", xlim=c(2,20)) 
+grid(nx=NA, ny=NULL, lwd = 4)
+
+options(scipen=999)
+quantile(sfbay$funding_num, probs=c(0, 0.25, .5, 0.75, 1), na.rm=TRUE)
+
+```
+$\pagebreak$         
+
+          Comparing Quantitative vs. Quantitative
+          
+          Scatterplot of Funding Amt vs. Year
+          
+```{r}
+plot(la$founded_year, la$funding_num, main="Scatterplot of Funding Amt by Year", xlab="Market", ylab="Funding$", las=1,  cex.axis=.8, col=1, ylim=c(0, 10000000)) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+grid(nx=NA, ny=NULL, lty=1, lwd = 2)
+
+quantile(la$funding_num, probs=c(0, 0.25, .5, 0.75, 1), na.rm=TRUE)
+
+boxplot(la$funding_num ~ la$status, las=2, main="Boxplot of Funding by Status")
+```
+
+$\pagebreak$
+
+    In this scatterplot, we look at the different types of software startups
+    the year founded and the amount of funding they have received.
+
+```{r}
+ggplot(la, aes( x=founded_year, y=funding_num, colour = category_list)) + geom_point(alpha=0.8) + stat_smooth( method="loess", formula = y ~ x) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+

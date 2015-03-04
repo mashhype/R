@@ -1,0 +1,22 @@
+---
+title: "In Class November 3 2014"
+author: "Mashhood Syed"
+date: "November 3, 2014"
+output: pdf_document
+---
+
+```{r}
+wilt$classlabel = factor(wilt$class, levels=c('n', 'w'), labels=c(0,1))
+wilt.3x = glm(classlabel ~ Mean_NIR + Mean_Green, family=binomial(link="logit"), data=wilt)
+
+display(wilt.3, digits=4)
+
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

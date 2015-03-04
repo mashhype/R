@@ -1,0 +1,218 @@
+---
+title: "Regression Analysis of Boston Suburbs"
+author: "Mashhood Syed"
+date: "November 1, 2014"
+output: pdf_document
+---
+This dataset represents housing values in suburbs of Boston in the late 1970's. It was created in 1978 by D. Harrison and D.L. Rubinfeld.  The dataset was found at UCI's machine learning repository.
+
+Here is a description of each of the attributes (by column number):
+
+1.  per capita crime rate by town
+2.  proportion of residential land zoned for lots over 25,000 sq.ft.
+3.  proportion of non-retail business acres per town
+4.  Charles River dummy variable (= 1 if tract bounds river; 0 otherwise)
+5.  nitric oxides concentration (parts per 10 million)
+6.  average number of rooms per dwelling
+7.  proportion of owner-occupied units built prior to 1940
+8.  weighted distances to five Boston employment centres
+9.  index of accessibility to radial highways
+10. full-value property-tax rate per $10,000
+11. pupil-teacher ratio by town
+12. 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
+13. % lower status of the population 
+14. Median value of owner-occupied homes in $1000's
+
+Here is what I want to predict:  median_home_value (column 14)
+
+Here are the 4 continuous variables I am using to predict median_home_value:
+
+  pupil_teacher_ratio (column 11)
+  percent_lower_status_of_population (column 13)
+  access_to_radial_highways (column 9)
+  age_of_dwelling_since_1940 (column 7)
+
+```{r}
+setwd("~/Desktop/PS3")
+dataFile = "~/Desktop/PS3/housing.csv"
+data = read.csv(dataFile, header=TRUE)
+library(foreign)
+library(ggplot2)
+attach(data)
+summary(data)
+```
+
+Step 1: Coefficient Expectation
+
+I expect the coefficients to each have a negative sign.  For a majority of the variables, their is a inverse relationship between the price of a home and things like crime, % of people in a lower social status living in the area, pupil to teacher ratio, number of older homes.  As each predictor gets larger the price of the home goes down.
+
+First we start with the Pupil to Teacher Ratio
+```{r, echo=FALSE}
+fit.1 = lm(median_home_value_in_1k_increments ~ pupil_teacher_ratio)
+print(fit.1)
+confint(fit.1, "(Intercept)", level = 0.95)
+confint(fit.1, "pupil_teacher_ratio", level = 0.95)
+print(paste0("Sigma: ", summary(fit.1)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.1)$adj.r.squared))
+ggplot(data = data, aes(x = pupil_teacher_ratio, y = median_home_value_in_1k_increments)) + geom_point() + geom_abline(intercept = coef(fit.1)[1], slope = coef(fit.1)[2])
+```
+
+Now lets look at Percent of Population that is considered lower status
+```{r}
+fit.2 = lm(median_home_value_in_1k_increments ~ percent_lower_status_of_population)
+print(fit.2)
+confint(fit.2, "(Intercept)", level = 0.95)
+confint(fit.2, "percent_lower_status_of_population", level = 0.95)
+print(paste0("Sigma: ", summary(fit.2)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.2)$adj.r.squared))
+ggplot(data = data, aes(x = percent_lower_status_of_population, y = median_home_value_in_1k_increments)) + geom_point() + geom_abline(intercept = coef(fit.2)[1], slope = coef(fit.2)[2])
+```
+
+Next we look at Access to highways
+```{r}
+fit.3 = lm(median_home_value_in_1k_increments ~ access_to_highway)
+print(fit.3)
+confint(fit.3, "(Intercept)", level = 0.95)
+confint(fit.3, "access_to_highway", level = 0.95)
+print(paste0("Sigma: ", summary(fit.3)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.3)$adj.r.squared))
+ggplot(data = data, aes(x = access_to_highway, y = median_home_value_in_1k_increments)) + geom_point() + geom_abline(intercept = coef(fit.3)[1], slope = coef(fit.3)[2])
+```
+
+Finally lets look at Proportion of homes that were built prior to 1940
+```{r}
+fit.4 = lm(median_home_value_in_1k_increments ~ age_of_dwelling_since_1940)
+print(fit.4)
+confint(fit.4, "(Intercept)", level = 0.95)
+confint(fit.4, "age_of_dwelling_since_1940", level = 0.95)
+print(paste0("Sigma: ", summary(fit.4)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.4)$adj.r.squared))
+ggplot(data = data, aes(x = age_of_dwelling_since_1940, y = median_home_value_in_1k_increments)) + geom_point() + geom_abline(intercept = coef(fit.4)[1], slope = coef(fit.4)[2])
+```
+
+Step 2: Meaning of Regression Results Using Single Variable
+
+Based on these 4 variables, it looks like the "percent_lower_status_of_population" is the closest single variable that explains the variation in the median priceof homes in Boston suburbs.  
+This tells us that for each unit change increase in the "percent_lower_status_of_population" variable, there is a average 6.21 point change decrease in the median price of a home in a Boston suburb.
+
+The adjusted r-squared was 54% for this single variable.
+
+
+Step 3: Adding variables and Data Transformation
+
+I continue to expect to see coefficients with negative signs.
+Lets see what happens when we add the pupil teacher ratio and the crime rate
+```{r}
+fit.1x = lm(median_home_value_in_1k_increments ~ pupil_teacher_ratio + crime_rate)
+print(fit.1x)
+confint(fit.1x, "(Intercept)", level = 0.95)
+confint(fit.1x, "pupil_teacher_ratio", level = 0.95)
+confint(fit.1x, "crime_rate", level = 0.95)
+print(paste0("Sigma: ", summary(fit.1x)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.1x)$adj.r.squared))
+
+```
+
+Lets see what happens when we add the pupil teacher ratio and the Percent of Lower Status Population.  We see that our regression improves up to 60.5%!
+```{r}
+fit.2x = lm(median_home_value_in_1k_increments ~ pupil_teacher_ratio + percent_lower_status_of_population)
+print(fit.2x)
+confint(fit.2x, "(Intercept)", level = 0.95)
+confint(fit.2x, "pupil_teacher_ratio", level = 0.95)
+confint(fit.2x, "percent_lower_status_of_population", level = 0.95)
+print(paste0("Sigma: ", summary(fit.2x)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.2x)$adj.r.squared))
+
+```
+
+
+Lets see what happens when we add the pupil teacher ratio and Access To Highway
+```{r}
+fit.3x = lm(median_home_value_in_1k_increments ~ pupil_teacher_ratio + access_to_highway)
+print(fit.3x)
+confint(fit.3x, "(Intercept)", level = 0.95)
+confint(fit.3x, "pupil_teacher_ratio", level = 0.95)
+confint(fit.3x, "access_to_highway", level = 0.95)
+print(paste0("Sigma: ", summary(fit.3x)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.3x)$adj.r.squared))
+
+```
+
+
+Lets see what happens when we add the pupil teacher ratio and Age of Dwelling
+```{r}
+fit.4x = lm(median_home_value_in_1k_increments ~ pupil_teacher_ratio + age_of_dwelling_since_1940)
+print(fit.4x)
+confint(fit.4x, "(Intercept)", level = 0.95)
+confint(fit.4x, "pupil_teacher_ratio", level = 0.95)
+confint(fit.4x, "age_of_dwelling_since_1940", level = 0.95)
+print(paste0("Sigma: ", summary(fit.4x)$sigma))
+print(paste0("Adj R-squared: ", summary(fit.4x)$adj.r.squared))
+
+```
+
+Step 4:
+
+Now we will add a transformation and a interaction to see if we can beat 60.5%.  
+By using num_of_rooms along with percent_lower_status_of_population,
+pupil_teacher_ratio and distance_to_employment_centers:num_of_rooms_scaled
+we reach a Adjusted R squared of 68.7%!
+
+```{r}
+num_of_rooms_scaled = (num_of_rooms - mean(num_of_rooms))/(2 * sd(num_of_rooms))
+fit.11x = lm(median_home_value_in_1k_increments ~ percent_lower_status_of_population + pupil_teacher_ratio + distance_to_employment_centers:num_of_rooms_scaled, data = data)
+print(fit.11x)
+
+confint(fit.11x, "(Intercept)", level = 0.95)
+confint(fit.11x, "percent_lower_status_of_population", level = 0.95)
+confint(fit.11x, "pupil_teacher_ratio", level = 0.95)
+confint(fit.11x, "distance_to_employment_centers:num_of_rooms_scaled", level = 0.95)
+
+print(paste0("Sigma: ", summary(fit.11x)$sigma))
+print(paste0("(Adj) R-squared: ", summary(fit.11x)$adj.r.squared))
+```
+
+Step 5:
+The variables with the largest coefficients are:  
+"pupil_teacher_ratio"
+"nitric_oxide_conc"
+"num_of_rooms"
+"industrial"
+
+First we will scale these variables and see what our graph looks like:
+```{r}
+pupil_teacher_ratio_scaled = (pupil_teacher_ratio - mean(pupil_teacher_ratio))/(2 * sd(pupil_teacher_ratio))
+nitric_oxide_conc_scaled = (nitric_oxide_conc - mean(nitric_oxide_conc))/(2 * sd(nitric_oxide_conc))
+num_of_rooms_scaled = (num_of_rooms - mean(num_of_rooms))/(2 * sd(num_of_rooms))
+
+fit.b = lm(median_home_value_in_1k_increments ~ pupil_teacher_ratio_scaled + nitric_oxide_conc_scaled + num_of_rooms_scaled)
+
+print(fit.b)
+confint(fit.b, "(Intercept)", level = 0.95)
+confint(fit.b, "pupil_teacher_ratio_scaled", level = 0.95)
+confint(fit.b, "nitric_oxide_conc_scaled", level = 0.95)
+confint(fit.b, "num_of_rooms_scaled", level = 0.95)
+print(paste0("Sigma: ", summary(fit.b)$sigma))
+print(paste0("(Adj) R-squared: ", summary(fit.b)$adj.r.squared))
+
+```
+
+We see three different colors with regression lines to match representing the relationships between 
+the median home value and:  pupil teacher ratio, nitric oxide concentration, and the number of rooms.  The only predictor with a positive correlation is the number of rooms.  
+
+```{r}
+ggplot() + 
+  geom_point(data = data, aes(x = pupil_teacher_ratio_scaled, y = median_home_value_in_1k_increments), colour = "orange") + geom_abline(intercept = coef(fit.b)[1], slope = coef(fit.b)[2], colour = "orange") +
+
+ #ggplot() +
+  geom_point(data = data, aes(x = nitric_oxide_conc_scaled, y = median_home_value_in_1k_increments), colour = "blue") + geom_abline(intercept = coef(fit.b)[1], slope = coef(fit.b)[3], colour = "blue") +
+
+#ggplot() +
+geom_point(data = data, aes(x = num_of_rooms_scaled, y = median_home_value_in_1k_increments), colour = "red") + geom_abline(intercept = coef(fit.b)[1], slope = coef(fit.b)[4], colour = "red")
+
+```
+
+
+
+
+

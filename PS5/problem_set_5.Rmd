@@ -1,0 +1,298 @@
+---
+title: "Problem Set 5"
+author: "Mashhood Syed"
+output: pdf_document
+---
+
+There are 8 questions. Please answer all of them in this Rmd file. Submit both the Rmd file and the corresponding PDF. Change the name above from "You" to your name.
+
+1. After conducting an experiment, Samantha finds her p-value is 3.4%. What does that mean?
+
+  This means the probability of obtaining a sample mean, given that the value in the null   
+  hypothesis is true, is 3.4%.  When the p-value is < .05 (5%), we reject the null 
+  hypothesis.  Therefore, Samantha will reject the null hypothesis of her experiment.  
+  According to Fisher, the value is statistically significant and would warrant further investigation.
+
+2. After comparing the means of two models, Gregory finds the 95% confidence interval is (34.51, 98.57). What does that mean?
+
+  This means that Gregory can be 95% certain that the true population mean is between 34.51 
+  and 98.57.  
+
+We discussed 4 general types of problems. In the remaining exercises, you can reference the problems by letter.
+
+A. Test of Population Mean
+B. Test of Two Sample Means
+C. Test of Population Proportion
+D. Test of Two Sample Proportions
+
+3. Adam heard that projects using WhizBang take about 2.3 weeks on average to complete. He randomly sampled 27 projects using WhizBang with the number of weeks listed below.
+
+	1. What kind of problem is this?
+  A
+	2. Calculate Fisher's p-value and the 95% confidence interval for this data. Is the result statistically 
+  significant?
+  
+    p-value is .8150435 <-- The result is statistically significant (less than 5%)
+    95% conf. int is (2.24, 2.34) <-- No the result is not statistically significant.  The status quo lies in the 
+    conf. interval.
+	
+  3. What else do we need to know in order to determine if the result has practical significance?
+  
+    Maybe some domain knowledge about WhizBang (like what is it maybe :)).  
+  
+
+```{r}
+whizbang <- list()
+whizbang$data <- c( 2.73, 2.39, 2.29, 2.21, 2.17, 2.52, 2.42, 2.43, 2.21, 2.29, 2.14, 2.30, 2.25, 2.19, 2.47, 2.20, 2.16, 2.23, 2.23, 2.28, 2.22, 2.30, 2.19, 2.27, 2.34, 2.29, 2.22)
+whizbang$mu = 2.3
+whizbang$n = length(whizbang$data)
+whizbang$xbar = mean(whizbang$data)
+whizbang$sd = sd(whizbang$data)
+whizbang
+
+whizbang$t = (whizbang$xbar - whizbang$mu)/(whizbang$sd/sqrt(whizbang$n))
+whizbang$t
+whizbang$p.value = 2 * pt(-abs(whizbang$t), df = whizbang$n - 1)
+whizbang$p.value
+
+whizbang$se = whizbang$sd / sqrt(whizbang$n)
+whizbang$ci = c(whizbang$xbar - 1.96 * whizbang$se, whizbang$xbar + 1.96 * whizbang$se)
+whizbang$ci
+```
+
+4. Sarah thinks she's found the cure for the 48 hour flu--or at least a way to shorten it. In order to test her treatment, she has two random samples of individuals who have just been diagnosed with the 48 hour flu. One group she gives chicken soup (the traditional treatment) and the other group she gives her cure, Jameson's Irish Whiskey. She then observes the number of hours for each group until symptoms abate.
+
+	1. What kind of problem is this?
+  
+    B
+    
+	2. Calculate all values for this problem using The Modern Synthesis. Start with Neyman-Pearson then calculate the 
+  p-value and confidence interval. Is the result statistically significant?
+  
+    Nayman-Pearson:
+    Welch Two Sample t-test
+    data:  flu$data.1 and flu$data.2
+    t = 6.307, df = 32.633, p-value = 4.113e-07
+    alternative hypothesis: true difference in means is not equal to 0
+    95 percent confidence interval: 3.029552 5.916640
+    sample estimates:
+    mean of x mean of y: 46.94941  42.47632 
+  
+    The result is statiscally signifcant. based on a p-value of .0000004113
+  
+    p-value: 3.44888e-07
+    95% conf. interval: (3.033372, 5.912820)
+  
+    Since the interval does not include zero we can say that this result is statistically signficant.
+  
+	3. What else do we need to know in order to determine if the result has practical significance?
+  
+  Domain knowledge
+
+```{r}
+flu <- list()
+flu$data.1 <- c(46.90, 45.44, 49.98, 45.56, 48.76, 46.43, 45.06, 42.51, 49.84, 45.35, 47.56, 50.53, 46.99, 47.84, 47.34, 43.64, 48.41)
+flu$data.2 <- c(42.69, 39.45, 42.83, 42.72, 41.62, 44.56, 43.76, 45.29, 43.46, 38.82, 43.67, 42.87, 43.34, 41.72, 39.75, 44.64, 39.84, 45.52, 40.50 ) 
+
+two.means.df <- function(s2.1, n.1, s2.2, n.2) {
+numerator <- (s2.1/n.1) + (s2.2/n.2)
+denominator <- ((s2.1/n.1)/(n.1 - 1)) + ((s2.2/n.2)/(n.2 -
+1))
+return(numerator/denominator)
+}
+
+t.test(x = flu$data.1, y = flu$data.2)
+
+flu$mean.1 = mean(flu$data.1)
+flu$mean.2 = mean(flu$data.2)
+flu$d = flu$mean.1 - flu$mean.2
+flu$d
+
+flu$var.1 = var(flu$data.1)
+flu$var.2 = var(flu$data.2)
+
+flu$n.1 = length(flu$data.1)
+flu$n.2 = length(flu$data.2)
+
+flu$se = sqrt((flu$var.1/flu$n.1) + (flu$var.2/flu$n.2))
+
+flu$t = flu$d / flu$se
+
+flu$df <- two.means.df(flu$var.1, flu$n.1, flu$var.2, flu$n.2)
+flu$df
+
+flu$df = flu$n.1 + flu$n.2 - 2
+
+flu$pvalue = 2 * pt(-abs(flu$t), flu$df)
+flu$pvalue
+
+abs(qt(0.05/2, flu$df))
+
+flu$df
+flu$ci = c(flu$d - 2.03 * flu$se, flu$d + 2.03 * flu$se)
+flu$ci
+```
+
+5. Kevin has heard that 69% of people have never heard of his company, Shearz, which is set to disrupt the pet grooming scene. He commissions a study which polls 45 people at random. The results are below (1 = never heard of Shearz, 0 = heard of it).
+
+	1. What kind of problem is this?
+  
+    C
+	
+  2. Frame the inference problem using Neyman-Pearson Hypothesis Testin, specify all the steps and calculate the appropriate values. Do we reject or do not reject the null hypothesis?
+  
+    We reject the null hypothesis but only slightly since we see that our theta is .69 and our p-value is .688.
+
+```{r}
+shearz <- list()
+shearz$data <- c(1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1 )
+
+shearz$theta = 0.69
+shearz$n = length(shearz$data)
+shearz
+
+shearz$p = mean(shearz$data)
+shearz$p
+shearz$se = sqrt(shearz$p * (1 - shearz$p) / shearz$n)
+shearz
+
+shearz$z.score = (shearz$p - shearz$theta) / shearz$se
+shearz$z.score
+
+shearz$p.value = 2 * pnorm(-abs(shearz$z.score))
+shearz$p.value
+
+
+
+```
+
+
+6. Sarah runs an experiment to treat insomnia with Jameson's Irish Whiskey. The control group (data.1) is given a placebo. The treatment group (data.2) is given 3-fingers of Jameson's 1 hour before bed. The outcome is (1 = insomnia, 0 = no-insomnia). Was the Jameson's treatment successful?
+
+	1. What kind of problem is this?
+  
+    D
+    
+	2. Frame the inference problem using Fisher's Point and Interval approaches to statistical significance. Was the 
+    result statistically significant?
+    
+      Yes.  It is small (p-value is .40) and does not include zero (interval (0.3644112, 0.3990659))
+    
+	3. What else would we need to know in order to determine if the result is practically significant? 
+  
+      Domain knowledge.
+
+```{r}
+insomnia <- list()
+insomnia$data.1 <- c(1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1)
+insomnia$data.2 <- c(0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0 )
+
+insomnia$n.1 = length(insomnia$data.1)
+insomnia$n.2 = length(insomnia$data.2)
+
+insomnia
+
+insomnia$p.1 = mean(insomnia$data.1)
+insomnia$p.2 = mean(insomnia$data.2)
+
+insomnia$p = (insomnia$p.1 * insomnia$n.1 + insomnia$p.2 * insomnia$n.2)/(insomnia$n.1 + insomnia$n.2)
+insomnia$se <- insomnia$p * (1 - insomnia$p) * ((1/insomnia$n.1) + (1/insomnia$n.2))
+insomnia$d <- insomnia$p.1 - insomnia$p.2
+insomnia$z.score <- insomnia$d/insomnia$se
+insomnia
+
+insomnia$p.value <- 2 * pnorm(-abs(insomnia$z.score))
+insomnia$p.value
+
+insomnia$ci <- c(insomnia$d - 1.96 * insomnia$se, insomnia$d + 1.96 * insomnia$se)
+insomnia$ci
+
+```
+
+7. Redo question #3 using the Bootstrap. Provide both Frequentist and Bayesian interpretations. Use the same data structure for your results but add the "bootstrap" qualifier as we did in class.
+
+```{r}
+sample(whizbang$data, whizbang$n, replace = TRUE)
+
+t = rep(1, 1000)
+
+whizbang$bootstrap.samples <- lapply(t, function(x) sample(whizbang$data,
+whizbang$n, replace = TRUE))
+
+whizbang$bootstrap.means <- unlist(lapply(whizbang$bootstrap.samples,
+mean))
+
+min(whizbang$bootstrap.means)
+
+max(whizbang$bootstrap.means)
+
+mean(whizbang$bootstrap.means)
+
+sd(whizbang$bootstrap.means)
+
+library(ggplot2)
+ggplot(as.data.frame(whizbang$bootstrap.means), aes(x = whizbang$bootstrap.means)) +
+geom_histogram(aes(y = ..density..)) + stat_function(fun = dnorm, args = list(mean = mean(whizbang$bootstrap.means), sd = sd(whizbang$bootstrap.means)), color = "red")
+
+whizbang$bootstrap.mean <- mean(whizbang$bootstrap.means)
+whizbang$bootstrap.sd <- sd(whizbang$bootstrap.means)
+
+whizbang$bootstrap.ci <- c(whizbang$bootstrap.mean - 2.31 *
+whizbang$bootstrap.sd, whizbang$bootstrap.mean + 2.31 *
+whizbang$bootstrap.sd)
+
+whizbang$ci
+
+whizbang$bootstrap.ci
+
+quantile(whizbang$bootstrap.means, c(0.025, 0.975))
+
+
+```
+
+8. Redo question #6 using the Bootstrap. Provide both Frequentist and Bayesian interpretations. For the Bayesian interpretation discuss whether or not an uninformative prior is justified. Use the same data structure for your results but add the "boostrap" qualifier as we did in class.
+
+  The use of prior probability is based on having a set of hypotheses where the prior probability of each is the 
+  same (p.15).  In this problem, there is no evidence of having a set of hypothesis from previous experiments.  So 
+  in this case I dont think its justified.
+
+``` {r}
+
+insomnia$bootstrap.samples.1 <- lapply(t, function(x) sample(insomnia$data.1, insomnia$n.1, replace = TRUE))
+insomnia$bootstrap.samples.2 <- lapply(t, function(x) sample(insomnia$data.2, insomnia$n.2, replace = TRUE))
+insomnia$bootstrap.means.1 <- unlist(lapply(insomnia$bootstrap.samples.1, mean))
+insomnia$bootstrap.means.2 <- unlist(lapply(insomnia$bootstrap.samples.2, mean))
+insomnia$bootstrap.d <- insomnia$bootstrap.means.1 - insomnia$bootstrap.means.2
+
+min(insomnia$bootstrap.d)
+
+max(insomnia$bootstrap.d)
+
+mean(insomnia$bootstrap.d)
+
+sd(insomnia$bootstrap.d)
+
+ggplot(as.data.frame(insomnia$bootstrap.d), aes(x = insomnia$bootstrap.d)) +
+geom_histogram(aes(y = ..density..)) + stat_function(fun = dnorm, args = list(mean = mean(insomnia$bootstrap.d),
+sd = sd(insomnia$bootstrap.d)), color = "red")
+
+insomnia$bootstrap.mean <- mean(insomnia$bootstrap.d)
+insomnia$bootstrap.mean
+
+
+insomnia$bootstrap.sd <- sd(insomnia$bootstrap.d)
+insomnia$bootstrap.sd
+
+
+insomnia$bootstrap.ci <- c(insomnia$bootstrap.mean - 1.96 * insomnia$bootstrap.sd, insomnia$bootstrap.mean +
+1.96 * insomnia$bootstrap.sd)
+
+insomnia$bootstrap.ci
+
+
+insomnia$ci
+
+quantile(insomnia$bootstrap.d, c(0.025, 0.975))
+
+```
+

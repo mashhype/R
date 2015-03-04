@@ -1,0 +1,355 @@
+---
+title: "Logistic Regression Using Zoo Animals"
+author: "Mashhood Syed"
+date: "November 9, 2014"
+output: pdf_document
+---
+
+Dataset location:  http://archive.ics.uci.edu/ml/datasets/Zoo
+
+First we do some standard housekeeping:
+```{r}
+setwd("~/Desktop/PS4")
+zooFile = "zoo.data.txt"
+zoo = read.csv(zooFile, header=FALSE)
+colnames(zoo) = c("Animal Name", "Hair", "Feathers", "Eggs", "Milk", "Airborne", "Aquatic", "Predator", "Toothed", "Backbone", "Breathers", "Venomous", "Fins", "Legs", "Tail", "Domestic", "Catsize", "Type")
+#install.packages("dplyr", repos="http://cran.rstudio.com/")
+library(dplyr)
+#install.packages("arm", repos="http://cran.rstudio.com/")
+library(arm)
+#install.packages("ggplot2", repos="http://cran.rstudio.com/")
+library(ggplot2)
+attach(zoo)
+```
+
+1. Choose 4 Continuous/Discrete Variables as Predictors:
+  I am going to choose Legs, Tail, Venomous, and Toothed to predict whether the   
+  animal is a PREDATOR or not.
+  I expect the coefficients to be...
+
+  Legs:negative
+  Tail:positive
+  Venomous:positive
+  Toothed:positive
+
+1. All 4 predictors in single logistic regression
+
+```{r}
+
+zoo.all4 = glm(formula = Predator ~ Legs + Tail + Venomous + Toothed, family = binomial(link = "logit"))
+display(zoo.all4, digits = 4)
+
+```
+
+Below is a logistic regression using just one variable to start 
+2. Legs
+
+```{r}
+
+zoo.1 = glm(formula = Predator ~ Legs, family = binomial(link = "logit"))
+display(zoo.1, digits = 4)
+```
+
+Lets look at the other variables individually..
+2. Tail:
+
+```{r}
+
+zoo.2 = glm(formula = Predator ~ Tail, family = binomial(link = "logit"))
+display(zoo.2, digits = 4)
+```
+
+2. Venomous (this is a no brainer..or is it?)
+  Why isnt it 100% ?
+```{r}
+
+zoo.3 = glm(formula = Predator ~ Venomous, family = binomial(link = "logit"))
+display(zoo.3, digits = 4)
+```
+
+2. Toothed
+
+```{r}
+
+zoo.4 = glm(formula = Predator ~ Toothed, family = binomial(link = "logit"))
+display(zoo.4, digits = 4)
+```
+
+Calculating the logistic regression using "mean evaluation" and "divide by 4":
+Mean Evaluation, Divide by 4, and 95% confidence Interval:
+
+  Using Legs as our predictor, we get:
+
+```{r}
+
+Intercept_Legs = .5044
+Coeff_Est_of_Legs = -.0998
+Mean_value_of_Legs = 2.84
+Std_error_of_Legs = .1000
+conf__bottom_Legs = (Coeff_Est_of_Legs - 2*Std_error_of_Legs) / 4
+conf__top_Legs = (Coeff_Est_of_Legs + 2*Std_error_of_Legs) / 4
+mean_eval_of_Legs = Intercept_Legs - Coeff_Est_of_Legs*Mean_value_of_Legs
+Div_4_Legs = Coeff_Est_of_Legs / 4
+conf__bottom_Legs
+conf__top_Legs
+mean_eval_of_Legs
+Div_4_Legs
+
+
+```
+
+Using Tail as our predictor, we get:
+
+```{r}
+
+Intercept_Tail = .15
+Coeff_Est_of_Tail = .09
+Mean_value_of_Tail = mean(Tail)
+Std_error_of_Tail = .46
+conf__bottom_Tail = (Coeff_Est_of_Tail - 2*Std_error_of_Tail) / 4
+conf__top_Tail = (Coeff_Est_of_Tail + 2*Std_error_of_Tail) / 4
+mean_eval_of_Tail = Intercept_Tail - Coeff_Est_of_Tail*Mean_value_of_Tail
+Div_4_Tail = Coeff_Est_of_Tail / 4
+conf__bottom_Tail
+conf__top_Tail
+mean_eval_of_Tail
+Div_4_Tail
+
+```
+
+
+Using Venomous as our predictor, we get:
+
+```{r}
+
+Intercept_Venomous = .15
+Coeff_Est_of_Venomous = .95
+Mean_value_of_Venomous = mean(Venomous)
+Std_error_of_Venomous = .84
+conf__bottom_Venomous = (Coeff_Est_of_Venomous - 2*Std_error_of_Venomous) / 4
+conf__top_Venomous = (Coeff_Est_of_Venomous + 2*Std_error_of_Venomous) / 4
+mean_eval_of_Venomous = Intercept_Venomous - Coeff_Est_of_Venomous*Mean_value_of_Venomous
+Div_4_Venomous = Coeff_Est_of_Venomous / 4
+conf__bottom_Venomous
+conf__top_Venomous
+mean_eval_of_Venomous
+Div_4_Venomous
+
+```
+
+Using Toothed as our predictor, we get:
+
+```{r}
+
+Intercept_Toothed = -.10
+Coeff_Est_of_Toothed = .53
+Mean_value_of_Toothed = mean(Toothed)
+Std_error_of_Toothed = .41
+conf__bottom_Toothed = (Coeff_Est_of_Toothed - 2*Std_error_of_Toothed) / 4
+conf__top_Toothed = (Coeff_Est_of_Toothed + 2*Std_error_of_Toothed) / 4
+mean_eval_of_Toothed = Intercept_Toothed - Coeff_Est_of_Toothed*Mean_value_of_Toothed
+Div_4_Toothed = Coeff_Est_of_Toothed / 4
+conf__bottom_Toothed
+conf__top_Toothed
+mean_eval_of_Toothed
+Div_4_Toothed
+
+```
+
+2. Now lets add more variables to try and improve our model
+
+  In terms of the difference in the residual and null deviance, we have a differenc
+  of 3.3.  We can see that we have added two predictors and that our decrease is > 
+  2.  We have a better model, as insignificant as it may be by 1.3.
+  In regards to the mean values of Venomous and Toothed, there is a 55.7% chance   
+  that our Animal is a Predator
+```{r}
+
+zoo.5 = glm(formula = Predator ~ + Venomous + Toothed, family = binomial(link = "logit"))
+log_odds5 = cbind(1, mean(Venomous), mean(Toothed)) %*% zoo.5$coef
+invlogit(log_odds5)
+display(zoo.5, digits = 4)
+
+
+```
+
+2. Now lets make the coefficients comparable by multiplying each coefficient
+  by its predictors SD.
+
+  We can see that a one SD difference in Venomous translates to a 6.99 point
+  increase in the probability of the animal being a Predator.  In addition, 
+  we get a 7.06 point increase if the animal is Toothed.
+```{r}
+((coef(zoo.5)["Venomous"] * sd(Venomous))/4) * 100
+
+((coef(zoo.5)["Toothed"] * sd(Toothed))/4) * 100
+
+```
+
+3. Lets add in a interaction predictor to see if that improves our model
+  
+``` {r}
+zoo.6 = glm(Predator ~ + Venomous + Toothed + Toothed:Venomous, family = binomial(link = "logit"))
+display(zoo.6)
+
+```
+
+3. In order to interpret our results, we need to use the mean of our variables
+  Venomous and Toothed.  Our results tell us that the base probability of an 
+  animal being a Predator given an average Venomous value and a average Toothed 
+  value is 71.6% 
+```{r}
+log_odds.6 = cbind(1, mean(Venomous), mean(Toothed), mean(Venomous)*mean(Toothed)) %*% coef(zoo.6)
+invlogit(log_odds.6)
+
+```
+
+4. Lets look at some other predictors to see if we can improve our model once again
+
+Lets try these three new variables:
+Hair, Backbone, Breathers
+
+ I expect the coefficients to be...
+
+  Hair: positive
+  Backbone: positive
+  Breathers: negative
+  
+```{r}
+
+zoo.1a = glm(Predator ~ Hair, family = binomial(link = "logit"))
+display(zoo.1a, digits = 4)
+
+zoo.2a = glm(Predator ~ Backbone, family = binomial(link = "logit"))
+display(zoo.2a, digits = 4)
+
+zoo.3a = glm(Predator ~ Breathers, family = binomial(link = "logit"))
+display(zoo.3a, digits = 4)
+
+
+```
+
+4. Using Hair as our predictor, we get:
+
+```{r}
+
+Intercept_Hair = .4925
+Coeff_Est_of_Hair = -.6322
+Mean_value_of_Hair = mean(Hair)
+Std_error_of_Hair = .4083
+conf__bottom_Hair = (Coeff_Est_of_Hair - 2*Std_error_of_Hair) / 4
+conf__top_Hair = (Coeff_Est_of_Hair + 2*Std_error_of_Hair) / 4
+mean_eval_of_Hair = Intercept_Hair - Coeff_Est_of_Hair*Mean_value_of_Hair
+Div_4_Hair = Coeff_Est_of_Hair / 4
+conf__bottom_Hair
+conf__top_Hair
+mean_eval_of_Hair
+Div_4_Hair
+
+```
+
+4. Using Backbone as our predictor, we get:
+
+```{r}
+
+Intercept_Backbone = .0000
+Coeff_Est_of_Backbone = .2666
+Mean_value_of_Backbone = mean(Backbone)
+Std_error_of_Backbone = .5208
+conf__bottom_Backbone = (Coeff_Est_of_Backbone - 2*Std_error_of_Backbone) / 4
+conf__top_Backbone = (Coeff_Est_of_Backbone + 2*Std_error_of_Backbone) / 4
+mean_eval_of_Backbone = Intercept_Backbone - Coeff_Est_of_Backbone*Mean_value_of_Backbone
+Div_4_Backbone = Coeff_Est_of_Backbone / 4
+conf__bottom_Backbone
+conf__top_Backbone
+mean_eval_of_Backbone
+Div_4_Backbone
+
+```
+
+4. Using Breathers as our predictor, we get:
+
+```{r}
+
+Intercept_Breathers = 1.4469
+Coeff_Est_of_Breathers = -1.4969
+Mean_value_of_Breathers = mean(Breathers)
+Std_error_of_Breathers = .5990
+conf__bottom_Breathers = (Coeff_Est_of_Breathers - 2*Std_error_of_Breathers) / 4
+conf__top_Breathers = (Coeff_Est_of_Breathers + 2*Std_error_of_Breathers) / 4
+mean_eval_of_Breathers = Intercept_Breathers - Coeff_Est_of_Breathers*Mean_value_of_Breathers
+Div_4_Breathers = Coeff_Est_of_Breathers / 4
+conf__bottom_Breathers
+conf__top_Breathers
+mean_eval_of_Breathers
+Div_4_Breathers
+
+```
+
+4. Now lets add more variables to try and improve our model
+
+  In terms of the difference in the residual and null deviance, we have a differenc
+  of 8.3.  We can see that we have added two predictors and that our decrease is > 
+  2.  We have a better model, 6.3 points higher than our last model.
+  In regards to the mean values of Breathers and Backbone, there is a 56.59% chance   
+  that our Animal is a Predator (only slightly better then our first model).
+```{r, echo=FALSE}
+
+zoo.7 = glm(formula = Predator ~ + Breathers + Backbone, family = binomial(link = "logit"))
+log_odds7 = cbind(1, mean(Breathers), mean(Backbone)) %*% zoo.7$coef
+invlogit(log_odds7)
+display(zoo.7, digits = 4)
+
+```
+
+4. Now lets make the coefficients comparable by multiplying each coefficient
+  by its predictors SD.
+
+  We can see that one SD difference in Backbone translates to a 6.38 point
+  increase in the probability of the animal being a Predator.  In addition, 
+  we get a -16.93 point decrease if the animal has Breathers.
+```{r, echo=FALSE}
+((coef(zoo.7)["Backbone"] * sd(Backbone))/4) * 100
+
+((coef(zoo.7)["Breathers"] * sd(Breathers))/4) * 100
+
+```
+
+5. Summary
+
+Based on the data we were given, we performed analysis to see which attributes provided us the greatest probability of arriving at whether a given animal at the zoo was a Predator or not.  The data set had only categorical values that were discrete.  For example, we knew whether or not a given animal had a particular attribute or not (ex: hair, feathers, toothed, backbone).  These were all essentially yes/no indicators.  We were able to combine different attributes in the data to see which combination would yield us a better probability.  By doing this, we are able to "hone" in on what one variable (or combination thereof) really decides whether or not our animal in question is a Predator.  While he had a fair number of attributes to work with, they were all the same type of attribute (binary).  If we had a combination of both binary and numeric values, we could have gained even more insight into the model and possibly improved our prediction.  An example of some numeric values that could have been helpful are:  Speed (how fast can the animal run) and sleep (how much does the animal sleep).
+
+Below are a few graphs that plot a few of the variables discussed in this Problem Set.
+
+```{r}
+
+plot(Venomous, Predator,xlab="Venomous",ylab="Probability of Being a Predator") # plot with body size on x-axis and survival (0 or 1) on y-axis
+g=glm(Predator~Venomous,family=binomial) # run a logistic regression model (in this case, generalized linear model with logit link). see ?glm
+
+curve(predict(g,data.frame(Venomous=x),type="resp"),add=TRUE) # draws a curve based on prediction from logistic regression model
+
+points(Venomous,fitted(g),pch=20) # optional: you could skip this draws an invisible set of points of body size survival based on a 'fit' to glm model. pch= changes type of dots.
+
+```
+
+```{r}
+
+plot(Toothed, Predator,xlab="Toothed",ylab="Probability of Being a Predator") # plot with body size on x-axis and survival (0 or 1) on y-axis
+g=glm(Predator~Toothed,family=binomial) # run a logistic regression model (in this case, generalized linear model with logit link). see ?glm
+
+curve(predict(g,data.frame(Toothed=x),type="resp"),add=TRUE) # draws a curve based on prediction from logistic regression model
+
+points(Toothed,fitted(g),pch=20) # optional: you could skip this draws an invisible set of points of body size survival based on a 'fit' to glm model. pch= changes type of dots.
+
+```
+
+```{r}
+plot(Legs, Predator,xlab="Legs",ylab="Probability of Being a Predator") # plot with body size on x-axis and survival (0 or 1) on y-axis
+g=glm(Predator~Legs,family=binomial) # run a logistic regression model (in this case, generalized linear model with logit link). see ?glm
+
+curve(predict(g,data.frame(Legs=x),type="resp"),add=TRUE) # draws a curve based on prediction from logistic regression model
+
+points(Legs,fitted(g),pch=20) # optional: you could skip this draws an invisible set of points of body size survival based on a 'fit' to glm model. pch= changes type of dots.
+
+```
+
